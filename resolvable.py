@@ -53,19 +53,23 @@ for file_name in sys.argv[3:]:
 
             for i in reversed(range(1, len(domain_by_dots) - 1)):
                 maybe_wildcard = ".".join(domain_by_dots[i:])
-                print(maybe_wildcard)
                 if maybe_wildcard not in possible_wildcards:
                     possible_wildcards.add(maybe_wildcard)
 
 
 possible_wildcards = sorted(possible_wildcards, key=lambda x: x.count("."))
-print("Possible wildcards: ", possible_wildcards)
+# print("Possible wildcards: ", possible_wildcards)
 
+wildcards = set()
 # Filter out static DNS wildcards
 for maybe_wildcard in possible_wildcards:
-    if not is_wildcard(maybe_wildcard):
+    if any(maybe_wildcard.endswith(w) for w in wildcards) or not is_wildcard(
+        maybe_wildcard
+    ):
         continue
+
     orig_len = len(domains)
+    wildcards.add(maybe_wildcard)
     domains = set(d for d in domains if not d.endswith(f".{maybe_wildcard}"))
     if orig_len != len(domains):
         domains.add(f"wildcard.{maybe_wildcard}")
