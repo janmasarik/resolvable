@@ -32,6 +32,10 @@ def is_wildcard(domain):
         return True
 
 
+def domain_sort(domain):
+    return (not domain.startswith("wildcard."), domain.count("."), domain)
+
+
 # load domains from all sources into domains set
 for file_name in sys.argv[3:]:
     with open(file_name) as domains_file:
@@ -71,7 +75,10 @@ with ThreadPoolExecutor() as executor:
         future = executor.submit(task, (domain))
 
 with open(sys.argv[1], "w") as out:
-    out.write("\n".join(sorted(resolvable, key=lambda x: (x.count("."), x))))
+    out.write("\n".join(sorted(resolvable, key=domain_sort)))
 
+# Replace resolvable with domains for more results (but more false positives)
 with open(sys.argv[2], "w") as out_domains:
-    out_domains.write("\n".join((sorted(domains, key=lambda x: (x.count("."), x)))))
+    out_domains.write(
+        "\n".join((sorted((r.split(",")[0] for r in resolvable), key=domain_sort)))
+    )
