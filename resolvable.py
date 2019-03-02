@@ -24,6 +24,7 @@ def is_wildcard(domain):
             "plznoresults",
             "gibbountyplz",
         ):
+            print(f"Trying {domain}")
             _ = gethostbyname(f"{sub}.{domain}")
     except Exception:
         return False
@@ -44,31 +45,33 @@ for file_name in sys.argv[3:]:
                 domain = domain[1:]
 
             domains.add(domain)
-
             domain_by_dots = domain.split(".")
-            if len(domain_by_dots) <= 2:
-                continue
 
-            for i in range(len(domain_by_dots) - 2):
-                print(".".join(domain_by_dots[i:]))
-                possible_wildcards.add(".".join(domain_by_dots[i:]))
+            for i in reversed(range(1, len(domain_by_dots) - 1)):
+                maybe_wildcard = ".".join(domain_by_dots[i:])
+                print(maybe_wildcard)
+                if maybe_wildcard not in possible_wildcards:
+                    possible_wildcards.add(maybe_wildcard)
 
 
-possible_wildcards = sorted(possible_wildcards, key=lambda item: item.count("."))
+possible_wildcards = sorted(possible_wildcards, key=lambda x: x.count("."))
+print("Possible wildcards: ", possible_wildcards)
+
 # Filter out static DNS wildcards
 for maybe_wildcard in possible_wildcards:
-    if is_wildcard(maybe_wildcard):
-        orig_len = len(domains)
-        domains = set(d for d in domains if not d.endswith(maybe_wildcard))
-        if orig_len != len(domains):
-            domains.add(f"wildcard.{maybe_wildcard}")
+    if not is_wildcard(maybe_wildcard):
+        continue
+    orig_len = len(domains)
+    domains = set(d for d in domains if not d.endswith(f".{maybe_wildcard}"))
+    if orig_len != len(domains):
+        domains.add(f"wildcard.{maybe_wildcard}")
 
 with ThreadPoolExecutor() as executor:
     for domain in domains:
         future = executor.submit(task, (domain))
 
 with open(sys.argv[1], "w") as out:
-    out.write("\n".join(sorted(resolvable)))
+    out.write("\n".join(sorted(resolvable, key=lambda x: (x.count("."), x))))
 
 with open(sys.argv[2], "w") as out_domains:
-    out_domains.write("\n".join(sorted(domains)))
+    out_domains.write("\n".join((sorted(domains, key=lambda x: (x.count("."), x)))))
