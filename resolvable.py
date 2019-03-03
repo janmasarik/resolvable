@@ -2,6 +2,7 @@ import sys
 import contextlib
 import random
 import string
+import dns.resolver
 
 from socket import gethostbyname
 from concurrent.futures import ThreadPoolExecutor
@@ -12,6 +13,11 @@ possible_wildcards = set()
 
 
 def task(domain):
+    with contextlib.suppress(Exception):
+        answers = dns.resolver.query(domain, "CNAME")
+        resolvable.append(f"{domain},{str(answers[0].target)[:-1]}")
+        return
+
     with contextlib.suppress(Exception):
         ip = gethostbyname(domain)
         resolvable.append(f"{domain},{ip}")
