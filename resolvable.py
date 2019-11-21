@@ -84,14 +84,15 @@ for domain, dns_responses in grouped_domains.items():
     elif dns_responses[0].type == "a":
         dns_record = DNSRecord(domain, "A", tuple(sorted(a[1] for a in dns_responses)))
     else:
-        print(domain, dns_responses)
-        raise RuntimeError("Unexpected DNS response!")
+        print("Unexpected respone, dropping!", domain, dns_responses)
 
     domain_by_dots = dns_record.domain.split(".")
 
     for i in reversed(range(1, len(domain_by_dots) - 1)):
         maybe_wildcard = ".".join(domain_by_dots[i:])
+        print(maybe_wildcard)
         wildcard_response = get_wildcard_domain(maybe_wildcard)
+        print(wildcard_response)
         is_wildcard = False
         for wildcard_ip in wildcard_response[dns_record.type]:
             for ip in dns_record.response:
