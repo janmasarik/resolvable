@@ -85,6 +85,7 @@ for domain, dns_responses in grouped_domains.items():
         dns_record = DNSRecord(domain, "A", tuple(sorted(a[1] for a in dns_responses)))
     else:
         print("Unexpected respone, dropping!", domain, dns_responses)
+        continue
 
     domain_by_dots = dns_record.domain.split(".")
 
